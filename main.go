@@ -80,9 +80,14 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"unicode"
 
 	"github.com/ledongthuc/pdf"
 	"github.com/xuri/excelize/v2"
+)
+
+var (
+	lg = log.New(os.Stderr, "ERROR:\t", log.Lshortfile)
 )
 
 func main() {
@@ -92,41 +97,52 @@ func main() {
 	// 	}
 	// 	fmt.Println()
 	// }
+
 	IDs, err := GetData("data")
 	if err != nil {
-		log.Fatalln(err)
+		lg.Fatalln(err)
 	}
 
 	f := excelize.NewFile()
 	index := f.NewSheet("Удостоверения")
-
+outerLoop:
 	for i := 0; i < len(IDs); i++ {
 		for j := 0; j < len(IDs[i]); j++ {
-			f.SetCellValue("Удостоверения", string([]rune{rune('A' + j)})+strconv.Itoa((i+1)), IDs[i][j])
+			err := f.SetCellValue("Удостоверения", string([]rune{rune('A' + j)})+strconv.Itoa((i+1)), IDs[i][j])
+			if err != nil {
 
+				continue outerLoop
+			}
 		}
 	}
 
 	f.SetActiveSheet(index)
+	_, err = os.ReadFile("Book1.xlsx")
+	if err == nil {
+		os.Remove("Book1.xlsx")
+	}
 	if err := f.SaveAs("Book1.xlsx"); err != nil {
 		fmt.Println(err)
 	}
 }
 
 func GetData(dirPath string) ([][]string, error) {
-	data := [][]string{{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}}
+	data := [][]string{}
 	files, err := os.ReadDir(dirPath)
 	if err != nil {
 		return [][]string{}, err
 	}
 
 	for i, f := range files {
+		data = append(data, []string{})
+
 		content, err := readPdf(dirPath + "/" + f.Name())
 		if err != nil {
-			log.Printf("File #%s skipped: %s", f.Name(), err)
+			// lg.Printf("File %s skipped: %s", f.Name(), err)
+			continue
 		}
+
 		data[i] = append(data[i], content...)
-		fmt.Println(data[i])
 	}
 	return data, nil
 }
@@ -149,10 +165,15 @@ func readPdf(path string) ([]string, error) {
 
 		rows, _ := p.GetTextByRow()
 
-		for _, row := range rows {
+		for i, row := range rows {
 			// println(">>>> row: ", row.Position)
 			for _, word := range row.Content {
-				data = append(data, word.S)
+				if i == 2 && len(word.S) != 0 && unicode.IsDigit(rune(word.S[0])) {
+					data = append(data, "asodk")
+				} else {
+					data = append(data, word.S)
+				}
+
 			}
 		}
 	}
