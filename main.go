@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"time"
@@ -18,7 +20,11 @@ var (
 )
 
 func main() {
-	IDs, err := GetData("data")
+	absPath, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	if err != nil {
+		fmt.Println(err)
+	}
+	IDs, err := GetData(absPath + `/data`)
 	if err != nil {
 		lg.Fatalln(err)
 	}
@@ -35,12 +41,13 @@ func main() {
 	}
 
 	f.SetActiveSheet(index)
-	reNew("Book1.xlsx")
+	reNew(absPath + "/Book1.xlsx")
 
 	time.Sleep((1 * time.Second) / 2)
-	if err := f.SaveAs("Book1.xlsx"); err != nil {
-		fmt.Println(err)
+	if err := f.SaveAs(absPath + "/Book1.xlsx"); err != nil {
+		lg.Println(err)
 	}
+	os.Remove(absPath + "/data")
 }
 
 func GetData(dirPath string) ([][]string, error) {
@@ -51,20 +58,24 @@ func GetData(dirPath string) ([][]string, error) {
 	}
 	i := 0
 	fmt.Println(" Тип |   Время  |          Имя файла          |  Статус  |")
-
+	os.Mkdir(path.Join(dirPath[:len(dirPath)-4]+"/failed"), 0755)
+	os.Mkdir(path.Join(dirPath[:len(dirPath)-4]+"/success"), 0755)
 	for _, f := range files {
 
 		content, err := readPdf(dirPath + "/" + f.Name())
 		if err != nil {
 			lg.Printf(" %-30s skipped", f.Name())
+			os.Rename(path.Join(dirPath, "/"+f.Name()), path.Join(dirPath[:len(dirPath)-4]+"/failed/", f.Name()))
 			continue
 		}
 		if len(content) == 0 {
 			lg.Printf(" %-30s skipped", f.Name())
+			os.Rename(path.Join(dirPath, "/"+f.Name()), path.Join(dirPath[:len(dirPath)-4]+"/failed/", f.Name()))
 			continue
 		}
 		data = append(data, []string{}, []string{})
 		data[i] = append(data[i], content...)
+		os.Rename(path.Join(dirPath, "/"+f.Name()), path.Join(dirPath[:len(dirPath)-4]+"/success/", f.Name()))
 		i++
 	}
 	return data, nil
