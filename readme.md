@@ -3,6 +3,7 @@
 ### Usage
 ####     Create then place your files in `data` directory
 ```
+    $ go build .
     $ chmod 777 gocv
     $ ./gocv
 ```
