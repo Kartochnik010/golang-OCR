@@ -1,11 +1,6 @@
 # OCR written in Golang for .pdf files
 
-
-### Usage
-####     Create then place your files in `data` directory
-```
-    $ chmod 777 gocv
-    $ ./gocv
-```
+### Todo:
+- add flags to navigate paths
 
 Designed to work specifically with pdf versions of ID documents (удостоверения) from Kaspi.kz 
