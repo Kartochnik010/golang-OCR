@@ -6,3 +6,9 @@
 - tests
 
 Designed to work specifically with pdf versions of ID documents (удостоверения) from Kaspi.kz 
+
+### Usage:
+
+```
+go run . 
+```
