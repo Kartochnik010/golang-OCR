@@ -9,6 +9,8 @@ Designed to work specifically with pdf versions of ID documents (удостов�
 
 ### Usage:
 
+##### Create folder ```data``` and put all your pdfs in it.
+
 ```
 go run . 
 ```
